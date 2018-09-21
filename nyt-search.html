@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+        crossorigin="anonymous">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <link rel='stylesheet' href='https://use.fontawesome.com/releases/v5.3.1/css/all.css'
+        integrity='sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU'
+        crossorigin='anonymous'>
+  <title>Times Article Search</title>
+</head>
+
+<body>
+
+<div class="container">
+  <div class="row">
+    <div class="col-12">
+      <div class="jumbotron text-center mx-auto"
+           style="background: rgba(33,50,90,0.93); font-size: 58px; font-family: 'Karla', sans-serif; color: #FFFFFF;">
+        <i class="far fa-newspaper"></i> New York Times Search
+      </div>
+    </div>
+  </div>
+  <div class="row mt-4">
+    <div class="col-12">
+      <div class="panel panel-default border rounded shadow bg-white">
+        <div class="panel-heading w-auto mx-4 mt-3 mb-0 panel-danger" style="font-weight: bold;"><i class="far fa-list-alt"></i>
+          Search Parameters: <br>
+          <hr>
+        </div>
+        <div class="panel-body mt-0">
+          <form class="w-100 p-3">
+            <div class="form-group w-100 p-3 mt-0 mb-0">
+              <label for="searchTermInput">Search Term:</label>
+              <input type="text" class="form-control" id="searchTermInput">
+            </div>
+            <div class="form-group w-100 p-3 my-0 mt-0">
+              <label for="formSelectInput">Example select</label>
+              <select class="form-control" id="formSelectInput">
+                <option>1</option>
+                <option>5</option>
+                <option>10</option>
+              </select>
+            </div>
+            <div class="form-group w-100 p-3 my-0">
+              <label for="startYearInput">Start Year (Optional):</label>
+              <input type="text" class="form-control" id="startYearInput">
+            </div>
+            <div class="form-group w-100 p-3 mt-0">
+              <label for="endYearInput">End Year (Optional):</label>
+              <input type="text" class="form-control" id="endYearInput">
+            </div>
+            <div class="pl-3 mt-0">
+              <button type="submit" id="searchButton" class="btn btn-success bg-transparent text-success"><i class="fas fa-search"></i> Search</button>
+              <span class="pl-1"><button class="btn btn-danger bg-transparent text-danger" id="clearResults"><i class="far fa-trash-alt"></i> Clear Results</button></span>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row my-5">
+    <div class="col-12">
+      <div class="panel panel-default border shadow bg-white rounded">
+        <div class="panel-heading w-auto mx-4 mt-3 mb-0" style="font-weight: bold;"><i class="fas fa-solar-panel"></i> Top
+          Articles: <br>
+          <hr class="mb-4">
+        </div>
+        <div class="panel-body mt-0" id="articleDiv">
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  //search term: ?q='x'
+  //start year: begin_date='x'0101
+  //end year: end_date='x'1231
+  //sort: sort=newest or sort=oldest
+  //need: headline, byline, pub-date, url, section-name
+
+  $("#searchButton").click(function (event) {
+    event.preventDefault();
+    $("#articleDiv").empty();
+    var search = $("#searchTermInput").val();
+    var sDate = $("#startYearInput").val();
+    var eDate = $("#endYearInput").val();
+    var number = $("#formSelectInput").val();
+
+    if (!search.trim()) return;
+
+    if ((sDate === "") && (eDate === "")) {
+      var queryURL = "https://api.nytimes.com/svc/search/v2/articlesearch.json?api-key=4534afcff7454eb99fe3c43e06076e78&q=" + search;
+    }
+    else if (sDate === "") {
+      var queryURL = "https://api.nytimes.com/svc/search/v2/articlesearch.json?api-key=4534afcff7454eb99fe3c43e06076e78&q=" + search + "&end_date=" + eDate + "1231";
+    }
+    else if (eDate === "") {
+      var queryURL = "https://api.nytimes.com/svc/search/v2/articlesearch.json?api-key=4534afcff7454eb99fe3c43e06076e78&q=" + search + "&start_date=" + sDate + "0101";
+    }
+    else {
+      var queryURL = "https://api.nytimes.com/svc/search/v2/articlesearch.json?api-key=4534afcff7454eb99fe3c43e06076e78&q=" + search + "&start_date=" + sDate + "0101&end_date=" + eDate + "1231";
+    }
+    console.log(search);
+    console.log(sDate);
+    console.log(eDate);
+    console.log(number);
+    $.ajax({
+      url: queryURL,
+      method: "GET"
+    }).then(function (input) {
+      console.log(input)
+      console.log(input.response.docs[0].headline.main);
+      console.log(input.response.docs[0].byline.original);
+
+      for (var i = 0; i < number; i++) {
+        var newDiv = $("<div class='mx-5'>");
+
+        newDiv.append("<h2>" + (i + 1) + ". " + "<a href='" + input.response.docs[i].web_url + "' target='_blank'  class='text-body'>"  + input.response.docs[i].headline.main + "</a></h2>");
+        console.log(input.response.docs[i].byline);
+        if (input.response.docs[i].byline) {
+          if (input.response.docs[i].byline.original) {
+            newDiv.append("<p>" + input.response.docs[i].byline.original + "</p>");
+          }
+          else { newDiv.append("<p>") }
+        }
+        else { newDiv.append("<p>") }
+
+        $("#articleDiv").append(newDiv);
+      }
+    })
+
+  })
+
+</script>
+
+</body>
+
+</html>
